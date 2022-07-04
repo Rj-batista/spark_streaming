@@ -25,8 +25,7 @@ class amadeus_client:
         self.nb_passengers = nb_passengers
         self.escale = escale
         self.amadeus = Client(
-            client_id="NiItSOIbJgLxpiduy7sTS2pcGED0vtMV",
-            client_secret="HOPtnAaOdNmMA3kf",
+
 
         )
 
