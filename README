@@ -1,0 +1,10 @@
+    git checkout develop
+    git pull --rebase
+    git checkout -b the_feature_branch (the git branch must respect the naming convention)
+    Write your code in the feature branch & commit
+    git fetch --all to get updates from the server
+    git rebase origin/develop to rebase from the develop branch
+    follow the rebase & ensure conflicts a resolved (execute git rebase --continue after each commit conflict resolution)
+    push your branch
+    create your PR
+
