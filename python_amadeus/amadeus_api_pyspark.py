@@ -1,7 +1,9 @@
 from aviation_mapping import airport_database
 import os, sys
+import pandas as pd
 from amadeus import Client, ResponseError
 from pyspark.sql import SparkSession
+from pyspark.sql.types import FloatType
 from pyspark.sql.functions import (
     explode,
     col,
@@ -10,6 +12,8 @@ from pyspark.sql.functions import (
     split,
     expr,
     regexp_replace,
+    substring,
+    length
 )
 from pyspark.sql.types import StringType
 
@@ -24,10 +28,8 @@ class amadeus_client:
         self.date = date
         self.nb_passengers = nb_passengers
         self.escale = escale
-        self.amadeus = Client(
-
-
-        )
+        self.amadeus = Client(client_id="NiItSOIbJgLxpiduy7sTS2pcGED0vtMV",
+            client_secret="HOPtnAaOdNmMA3kf",)
 
     def __iter__(self):
         try:
@@ -540,12 +542,38 @@ if __name__ == "__main__":
     # "CDG", "MAD", "2022-11-01", 2
     # des_all, des_ret,date,nb_passager = input("Entrez vos informations de voyages: ")
     spark = SparkSession.builder.getOrCreate()
-    tmp = amadeus_client("CDG", "LIS", "2022-11-01", 2, "true")
-    tmp.plane_ticket().show(truncate=False)
-
-
+    
+    #Generation des fichiers day by day des billets d'avion.
+    
+    for month in range(1,13):
+        for day in range(1,28): 
+            if month < 10:
+                if day < 10:
+                    date = "2023-0"+str(month)+"-0"+str(day)
+                else:
+                    date = "2023-0"+str(month)+"-"+str(day)
+            else:
+                if day < 10:
+                    date = "2023-"+str(month)+"-0"+str(day)
+                else:
+                    date = "2023-"+str(month)+"-"+str(day)
+            tmp= amadeus_client("CDG", "LIS", date, 2,"true")
+            tmp = tmp.plane_ticket()
+            tmp = tmp.withColumn("price", expr("substring(prices,2,length(prices)-2)"))
+            tmp = tmp.select(col("id")
+                       , col("Aeroport_de_depart"), col("ville_de_depart"), col("date_de_depart")
+                       , col("aeroport_darrivee"), col("ville_darrivee"), col("date_darrivee")
+                       , col("Company"),col("price").cast(FloatType()), col("currency")
+                       , col("escale")
+                       , col("ville_descale"), col("aeroport_descale"), col("date_darrivee_escale")
+                       , col("date_depart_escale")
+                       , col("lastTicketingDate"))
+            tmp.printSchema()
+            tmp.show(truncate = False)
+            #tmp.toPandas().to_csv("/Users/mamadian_djalo/Documents/ESGI/Spark_Core/Projet/spark_streaming/Data/day-by-day/"+date+".csv", index= False)
+ 
     """
    -------------------------------------------------------------------------------------------------------------------
-   Zone de test sur le dataframe (grosChat)
+   Zone de test sur le dataframe
    -------------------------------------------------------------------------------------------------------------------
    """
